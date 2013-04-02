@@ -79,13 +79,31 @@ do_load(Parent, Addr, Port, ByteRate, RequestsPerSec) ->
             Parent ! {stop, self(), {error, Reason}};
         {ok, Socket} ->
             Bytes = <<0:(ByteRate*8)>>,
-            do_load_loop(Parent, Socket, Bytes, RequestsPerSec)
+            do_load_loop(Parent, Socket, queue:from_list(split_bin(Bytes, RequestsPerSec)))
     end.
 
-do_load_loop(Parent, Socket, Bytes, RequestsPerSec) ->
-    ok = gen_tcp:send(Socket, Bytes div RequestsPerSec),
+do_load_loop(Parent, Socket, BytesQueue) ->
+    {Bytes, BytesQueue1} = rotate(BytesQueue),
+    ok = gen_tcp:send(Socket, Bytes),
     receive
         stop -> ok
-    after (1000 div RequestsPerSec) ->
-            do_load_loop(Parent, Socket, Bytes, RequestsPerSec)
+    after (1000 div queue:len(BytesQueue1)) ->
+            do_load_loop(Parent, Socket, BytesQueue1)
     end.
+
+rotate(Queue) ->
+    {{value, Elem}, Queue1} = queue:out(Queue),
+    {Elem, queue:in(Elem, Queue1)}.
+
+split_bin(Bin, Num) ->
+    split_bin(Bin, byte_size(Bin) div Num, []).
+
+split_bin(Bin, PerSize, Acc) ->
+    case Bin of
+        <<Bin1:PerSize/binary, Bin2/binary>> ->
+            split_bin(Bin2, PerSize, [Bin1|Acc]);
+        _ ->
+            lists:reverse([Bin|Acc])
+    end.
+
+            
