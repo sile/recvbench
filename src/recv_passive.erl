@@ -12,17 +12,28 @@ start_link(Ref, Socket, Transport, Opts) ->
     Pid = spawn_link(?MODULE, init, [Ref, Socket, Transport, Opts]),
     {ok, Pid}.
 
+-record(state,
+        {
+          recv_length = 0 :: non_neg_integer(),
+          wait        = 0 :: non_neg_integer()
+        }).
 init(Ref, Socket, Transport, Opts) ->
     ok = ranch:accept_ack(Ref),
     SockOpts = proplists:get_value(sockopts, Opts, []),
     ok = inet:setopts(Socket, SockOpts),
-    loop(Socket, Transport).
 
-loop(Socket, Transport) ->
-    case Transport:recv(Socket, 0, infinity) of
+    State = #state{
+      recv_length = proplists:get_value(recv_len, Opts, 0),
+      wait        = proplists:get_value(wait, Opts, 0)
+     },
+    loop(Socket, Transport, State).
+
+loop(Socket, Transport, State) ->
+    timer:sleep(State#state.wait),
+    case Transport:recv(Socket, State#state.recv_length, infinity) of
         {ok, Data} ->
             io:format("~p: recv ~p\n", [self(), byte_size(Data)]),
-            loop(Socket, Transport);
+            loop(Socket, Transport, State);
         Other ->
             io:format("~p: ~p\n", [self(), Other]),
             ok = Transport:close(Socket)

@@ -84,11 +84,14 @@ do_load(Parent, Addr, Port, ByteRate, RequestsPerSec) ->
 
 do_load_loop(Parent, Socket, BytesQueue) ->
     {Bytes, BytesQueue1} = rotate(BytesQueue),
-    ok = gen_tcp:send(Socket, Bytes),
-    receive
-        stop -> ok
-    after (1000 div queue:len(BytesQueue1)) ->
-            do_load_loop(Parent, Socket, BytesQueue1)
+    case gen_tcp:send(Socket, Bytes) of
+        {error, Reason} -> io:format("# error: ~p\n", [Reason]);
+        ok ->
+            receive
+                stop -> ok
+            after (1000 div queue:len(BytesQueue1)) ->
+                    do_load_loop(Parent, Socket, BytesQueue1)
+            end
     end.
 
 rotate(Queue) ->
