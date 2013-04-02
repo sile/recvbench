@@ -1,0 +1,12 @@
+{application, recvbench,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { recvbench_app, []}},
+  {env, []}
+ ]}.
