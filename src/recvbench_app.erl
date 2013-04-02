@@ -10,7 +10,9 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
+    ok = application:start(ranch),
     recvbench_sup:start_link().
 
 stop(_State) ->
+    ok = application:stop(ranch),
     ok.
