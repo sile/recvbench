@@ -19,10 +19,4 @@ shell: compile
 	erl -pz ebin apps/*/ebin deps/*/ebin +K true
 
 start: compile
-	erl -pz ebin apps/*/ebin deps/*/ebin +K true -eval 'application:start(lvhls).'
-
-dialyzer-init:
-	dialyzer --build_plt --apps erts kernel stdlib crypto -r ebin apps/*/ebin deps/*/ebin
-
-dialyzer:
-	dialyzer --src -r src/ apps/*/src/
+	erl -pz ebin apps/*/ebin deps/*/ebin +K true -eval 'application:start(recvbench).'
