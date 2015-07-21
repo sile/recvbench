@@ -1,5 +1,8 @@
 all: compile xref eunit
 
+init:
+	@./rebar get-deps compile
+
 compile:
 	@./rebar compile skip_deps=true
 
