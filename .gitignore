@@ -1,9 +1,9 @@
 *~
 *.beam
-/rebar
 *.dump
 /lib/*/
 /deps/
 ebin
 doc
 .eunit
+.rebar
